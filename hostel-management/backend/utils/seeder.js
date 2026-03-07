@@ -1,4 +1,6 @@
+const studentsData=require('../students.json');
 require('dotenv').config();
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
@@ -116,7 +118,39 @@ const seedData = async () => {
       });
       console.log('✅ Sample Student created: student@college.edu / 9876543210 (Roll: CS2021001)');
     }
+    console.log("Adding 400 students (fast mode)...");
 
+const usersArray = studentsData.map(student => ({
+  name: student.name,
+  email: student.email,
+  password: student.password,
+  role: "student",
+  mobile: student.mobile,
+  address: "Hostel Campus",
+  isActive: true,
+  isVerified: true
+}));
+
+// Insert all users at once
+const insertedUsers = await User.insertMany(usersArray);
+
+// Prepare student documents
+const studentDocs = insertedUsers.map((user, index) => ({
+  userId: user._id,
+  rollNumber: studentsData[index].rollNumber,
+  roomNumber: studentsData[index].roomNumber,
+  parentName: studentsData[index].parentName,
+  parentMobile: studentsData[index].parentMobile,
+  parentEmail: studentsData[index].parentEmail,
+  course: studentsData[index].course,
+  year: studentsData[index].year,
+  hostelBlock: studentsData[index].hostelBlock
+}));
+
+// Insert all students at once
+await Student.insertMany(studentDocs);
+
+console.log("✅ 400 students inserted successfully");
     // Seed weekly mess menu
     const today = new Date();
     for (let i = 0; i < 7; i++) {
