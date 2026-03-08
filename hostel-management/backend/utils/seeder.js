@@ -120,16 +120,18 @@ const seedData = async () => {
     }
     console.log("Adding 400 students (fast mode)...");
 
-const usersArray = studentsData.map(student => ({
-  name: student.name,
-  email: student.email,
-  password: student.password,
-  role: "student",
-  mobile: student.mobile,
-  address: "Hostel Campus",
-  isActive: true,
-  isVerified: true
-}));
+    const usersArray = await Promise.all(
+      studentsData.map(async (student) => ({
+        name: student.name,
+        email: student.email,
+        password: await bcrypt.hash(student.password, 10),
+        role: "student",
+        mobile: student.mobile,
+        address: "Hostel Campus",
+        isActive: true,
+        isVerified: true
+      }))
+    );
 
 // Insert all users at once
 const insertedUsers = await User.insertMany(usersArray);
