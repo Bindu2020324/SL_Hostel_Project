@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 const navItems = [
   { path: '', icon: '📊', label: 'Analytics' },
   { path: '/users', icon: '👥', label: 'Manage Users' },
-  { path: '/add-user', icon: '➕', label: 'Add User' },
+  { path: '/add-user', icon: '➕', label: 'Add Student / Staff' },
 ];
 
 function Analytics() {
@@ -37,7 +37,7 @@ function Analytics() {
       <div className="card">
         <div className="card-header"><span className="card-title">⚡ Quick Actions</span></div>
         <div className="card-body" style={{display:'flex', gap:16, flexWrap:'wrap'}}>
-          <button className="btn btn-primary" onClick={() => navigate('/super-admin/add-user')}>➕ Add User</button>
+          <button className="btn btn-primary" onClick={() => navigate('/super-admin/add-user')}>➕ Add Student / Staff</button>
           <button className="btn btn-outline" onClick={() => navigate('/super-admin/users')}>👥 Manage Users</button>
         </div>
       </div>
@@ -101,7 +101,7 @@ function ManageUsers() {
       <div className="filter-tabs">
         {['all','student','warden','mess_admin','worker'].map(r => (
           <button key={r} className={`filter-tab ${roleFilter===r?'active':''}`} onClick={() => setRoleFilter(r)}>
-            {r === 'mess_admin' ? 'Mess Admin' : r.charAt(0).toUpperCase() + r.slice(1)}
+            {r === 'all' ? 'All' : r === 'mess_admin' ? 'Mess Admin' : r === 'worker' ? 'Repair Staff' : r.charAt(0).toUpperCase() + r.slice(1)}
           </button>
         ))}
       </div>
@@ -118,7 +118,7 @@ function ManageUsers() {
                   <td style={{fontSize:13}}>{u.email}</td>
                   <td>
                     <span style={{padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700, background: roleColors[u.role]||'#f1f5f9', color: roleTextColors[u.role]||'#64748b'}}>
-                      {u.role?.replace('_',' ').toUpperCase()}
+                      {u.role === 'worker' ? 'REPAIR STAFF' : u.role?.replace('_',' ').toUpperCase()}
                     </span>
                   </td>
                   <td style={{fontSize:13}}>{u.student?.rollNumber || u.employeeId || '-'}</td>
@@ -192,11 +192,13 @@ function AddUser() {
     </div>
   );
 
+  const roleLabels = { student: 'Student', warden: 'Warden', mess_admin: 'Mess Admin', worker: 'Repair Staff' };
+
   return (
     <div>
       <div className="flex items-center gap-4 mb-4">
         <button className="btn btn-outline btn-sm" onClick={() => navigate('/super-admin/users')}>← Back</button>
-        <h2 className="section-title" style={{margin:0}}>➕ Add New User</h2>
+        <h2 className="section-title" style={{margin:0}}>➕ Add Student / Staff</h2>
       </div>
       <div className="card" style={{maxWidth: 700}}>
         <div className="card-body">
@@ -206,8 +208,12 @@ function AddUser() {
               <option value="student">🎓 Student</option>
               <option value="warden">👮 Warden</option>
               <option value="mess_admin">🍽️ Mess Admin</option>
-              <option value="worker">⚡ Worker</option>
+              <option value="worker">🔧 Repair Staff</option>
             </select>
+            <p style={{fontSize: 12, color: '#64748b', marginTop: 4}}>
+              {role === 'student' && 'Students use Roll Number + Password to login.'}
+              {role !== 'student' && 'Staff use Employee ID + Password to login.'}
+            </p>
           </div>
           <form onSubmit={handleSubmit}>
             <div className="form-row">
@@ -220,7 +226,7 @@ function AddUser() {
             </div>
             {role !== 'student' && (
               <div className="form-group">
-                {f('employeeId','Employee ID','text',true,'e.g. W002')}
+                {f('employeeId','Employee ID (used for login)','text',true, role === 'warden' ? 'e.g. W002' : role === 'mess_admin' ? 'e.g. M002' : 'e.g. EW002')}
               </div>
             )}
             {f('address','Address','text',false,'Full address')}
@@ -248,7 +254,7 @@ function AddUser() {
               </>
             )}
             <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{marginTop:8}}>
-              {loading ? 'Creating...' : `➕ Create ${role.replace('_',' ')} Account`}
+              {loading ? 'Creating...' : `➕ Create ${roleLabels[role]} Account`}
             </button>
           </form>
         </div>

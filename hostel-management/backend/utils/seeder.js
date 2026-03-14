@@ -1,11 +1,11 @@
-const studentsData=require('../students.json');
-require('dotenv').config();
+require("dotenv").config();
 
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Student = require('../models/Student');
 const MessMenu = require('../models/MessMenu');
+const studentsData=require('../students.json');
 
 const connectDB = async () => {
   // await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/hostel_management');
@@ -118,7 +118,7 @@ const seedData = async () => {
       });
       console.log('✅ Sample Student created: student@college.edu / 9876543210 (Roll: CS2021001)');
     }
-    console.log("Adding 400 students (fast mode)...");
+    console.log(`Adding ${studentsData.length} students from students.json...`);
 
     const usersArray = await Promise.all(
       studentsData.map(async (student) => ({
@@ -152,7 +152,7 @@ const studentDocs = insertedUsers.map((user, index) => ({
 // Insert all students at once
 await Student.insertMany(studentDocs);
 
-console.log("✅ 400 students inserted successfully");
+console.log(`✅ ${studentsData.length} students inserted successfully`);
     // Seed weekly mess menu
     const today = new Date();
     for (let i = 0; i < 7; i++) {
