@@ -28,23 +28,45 @@ router.get('/users', protect, authorize('super_admin', 'warden'), async (req, re
   }
 });
 
-// Add user (super admin)
+// Add user (super admin) – student, warden, mess_admin, repair staff (worker)
 router.post('/users', protect, authorize('super_admin'), async (req, res) => {
   try {
     const { name, email, password, role, employeeId, mobile, address, rollNumber, roomNumber, parentName, parentMobile, parentEmail, course, year, hostelBlock } = req.body;
-    
-    const user = await User.create({ name, email, password, role, employeeId, mobile, address, isActive: true, isVerified: true });
-    
+
+    const allowedRoles = ['student', 'warden', 'mess_admin', 'worker'];
+    if (!role || !allowedRoles.includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role. Use: student, warden, mess_admin, worker' });
+    }
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email and password are required' });
+    }
+
+    // Staff roles (warden, mess_admin, worker) require employeeId for login
+    if (['warden', 'mess_admin', 'worker'].includes(role)) {
+      if (!employeeId || !String(employeeId).trim()) {
+        return res.status(400).json({ success: false, message: 'Employee ID is required for Warden, Mess Admin and Repair Staff' });
+      }
+    }
+
+    // Student requires extra fields and creates Student record
+    if (role === 'student') {
+      if (!rollNumber || !roomNumber || !parentName || !parentMobile || !parentEmail) {
+        return res.status(400).json({ success: false, message: 'Student requires: roll number, room number, parent name, parent mobile, parent email' });
+      }
+    }
+
+    const user = await User.create({ name, email, password, role, employeeId: role !== 'student' ? employeeId : undefined, mobile, address, isActive: true, isVerified: true });
+
     let studentData = null;
     if (role === 'student') {
       studentData = await Student.create({
         userId: user._id, rollNumber, roomNumber, parentName, parentMobile, parentEmail, course, year, hostelBlock
       });
     }
-    
+
     res.status(201).json({ success: true, data: { user: { ...user.toObject(), password: undefined }, student: studentData }, message: 'User created' });
   } catch (error) {
-    if (error.code === 11000) return res.status(400).json({ success: false, message: 'Email or ID already exists' });
+    if (error.code === 11000) return res.status(400).json({ success: false, message: 'Email or Employee ID or Roll Number already exists' });
     res.status(500).json({ success: false, message: error.message });
   }
 });
